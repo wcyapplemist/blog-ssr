@@ -45,7 +45,7 @@ export default function Home() {
               rel="noopener noreferrer"
               className={link}
             >
-              Tomoyuki Shirai
+              Shirai Tomoyuki
             </a>
             .
           </p>
