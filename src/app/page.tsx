@@ -1,5 +1,3 @@
-import { siteConfig } from "@/config/site";
-
 const link =
   "font-medium text-zinc-950 underline decoration-zinc-400 underline-offset-4 transition-colors hover:text-zinc-700 dark:text-zinc-50 dark:decoration-zinc-600 dark:hover:text-zinc-300";
 
@@ -68,7 +66,7 @@ export default function Home() {
           </ul>
           <p>
             Feel free to check out my{" "}
-            <a href={`${siteConfig.basePath}/docs/Wang%20Chenyu_Resume.pdf`} className={link}>
+            <a href="/docs/Wang%20Chenyu_Resume.pdf" className={link}>
               resume
             </a>{" "}
             and{" "}
