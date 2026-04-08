@@ -1,7 +1,8 @@
 import { NextResponse } from "next/server";
-import { sql } from "@/lib/db";
+import { getDb } from "@/lib/db";
 
 export async function GET() {
+  const sql = getDb();
   const entries = await sql`
     SELECT id, name, message, created_at
     FROM guestbook
@@ -12,6 +13,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  const sql = getDb();
   const body = await request.json();
   const { name, message } = body;
 
