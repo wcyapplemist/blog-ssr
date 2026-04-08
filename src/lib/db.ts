@@ -8,6 +8,18 @@ export function getDb() {
   return neon(url);
 }
 
+export async function ensureGuestbookTable() {
+  const sql = getDb();
+  await sql`
+    CREATE TABLE IF NOT EXISTS guestbook (
+      id SERIAL PRIMARY KEY,
+      name TEXT NOT NULL,
+      message TEXT NOT NULL,
+      created_at TIMESTAMPTZ DEFAULT NOW()
+    )
+  `;
+}
+
 export interface GuestbookEntry {
   id: number;
   name: string;

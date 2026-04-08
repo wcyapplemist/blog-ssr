@@ -1,9 +1,10 @@
-import { getDb, type GuestbookEntry } from "@/lib/db";
+import { getDb, ensureGuestbookTable, type GuestbookEntry } from "@/lib/db";
 import GuestbookForm from "@/components/GuestbookForm";
 
 export const dynamic = "force-dynamic";
 
 export default async function GuestbookPage() {
+  await ensureGuestbookTable();
   const sql = getDb();
   const entries = (await sql`
     SELECT id, name, message, created_at
