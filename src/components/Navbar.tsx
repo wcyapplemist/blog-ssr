@@ -7,6 +7,7 @@ const navItems = [
   { label: "Profile", href: "/" },
   { label: "Reading Notes", href: "/reading-notes" },
   { label: "Favorite Food", href: "/favorite-food" },
+  { label: "Guestbook", href: "/guestbook" },
 ];
 
 export default function Navbar() {

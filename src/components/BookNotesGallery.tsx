@@ -169,7 +169,7 @@ export default function BookNotesGallery() {
                   <RatingRow label="Character" score={selectedBook.characterScore} />
                 </div>
                 <div className="mt-2 whitespace-pre-line text-sm leading-7 text-muted-foreground">
-                  {selectedBook.notes || "暂无笔记"}
+                  {selectedBook.notes || "No notes yet"}
                 </div>
               </div>
             </div>

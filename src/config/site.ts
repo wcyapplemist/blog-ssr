@@ -1,6 +1,6 @@
 export const siteConfig = {
   name: "My Blog",
-  description: "个人博客",
+  description: "Personal Blog",
   url: "https://wcyapplemist.github.io",
   author: "wcyapplemist",
   links: {
