@@ -7,6 +7,7 @@ const navItems = [
   { label: "Profile", href: "/" },
   { label: "Reading Notes", href: "/reading-notes" },
   { label: "Favorite Food", href: "/favorite-food" },
+  { label: "API Playground", href: "/api-playground" },
   { label: "Guestbook", href: "/guestbook" },
 ];
 
