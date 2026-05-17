@@ -9,6 +9,7 @@ const navItems = [
   { label: "Favorite Food", href: "/favorite-food" },
   { label: "API Playground", href: "/api-playground" },
   { label: "Guestbook", href: "/guestbook" },
+  { label: "Point Cloud", href: "/point-cloud" },
 ];
 
 export default function Navbar() {
