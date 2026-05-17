@@ -3,7 +3,10 @@
 import { useState, useCallback } from "react";
 import dynamic from "next/dynamic";
 import PointCloudUpload from "@/components/PointCloudUpload";
+import PointCloudControlPanel from "@/components/PointCloudControlPanel";
 import type { PointData } from "@/lib/ply-parser";
+import type { ViewerSettings } from "@/lib/viewer-settings";
+import { defaultSettings } from "@/lib/viewer-settings";
 
 const PointCloudViewer = dynamic(
   () => import("@/components/PointCloudViewer"),
@@ -12,8 +15,10 @@ const PointCloudViewer = dynamic(
 
 export default function PointCloudPageClient() {
   const [data, setData] = useState<PointData | null>(null);
+  const [settings, setSettings] = useState<ViewerSettings>(defaultSettings);
 
   const handlePointCloudLoaded = useCallback((pointData: PointData) => {
+    setSettings(defaultSettings);
     setData(pointData);
   }, []);
 
@@ -45,8 +50,12 @@ export default function PointCloudPageClient() {
             </svg>
           </button>
         </div>
-        <div className="flex-1">
-          <PointCloudViewer data={data} />
+        <div className="relative flex-1">
+          <PointCloudControlPanel
+            settings={settings}
+            onSettingsChange={setSettings}
+          />
+          <PointCloudViewer data={data} settings={settings} />
         </div>
       </div>
     );
