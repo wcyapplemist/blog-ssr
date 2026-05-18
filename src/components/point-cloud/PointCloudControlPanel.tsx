@@ -3,17 +3,164 @@
 import { useState } from "react";
 import type { ViewerSettings } from "@/lib/viewer-settings";
 
+/**
+ * Props interface for the PointCloudControlPanel component.
+ *
+ * ## Data Flow
+ *
+ * This component operates as a controlled component:
+ * - Receives current settings via `settings` prop
+ * - Notifies parent of changes via `onSettingsChange` callback
+ * - Parent component (PointCloudPageClient) maintains the authoritative settings state
+ *
+ * This pattern allows multiple components to react to settings changes
+ * (e.g., viewer updates when control panel changes settings).
+ *
+ * @property settings - Current viewer settings object containing all configuration values
+ * @property onSettingsChange - Callback invoked with new settings object when any control is changed
+ *
+ * @see ViewerSettings type from @/lib/viewer-settings for the complete settings structure
+ * @see PointCloudPageClient for the parent component that manages settings state
+ */
 interface PointCloudControlPanelProps {
   settings: ViewerSettings;
   onSettingsChange: (settings: ViewerSettings) => void;
 }
 
+/**
+ * Collapsible control panel component for point cloud viewer settings.
+ *
+ * ## Architecture Overview
+ *
+ * This component provides a slide-in sidebar panel with comprehensive controls for
+ * customizing the point cloud viewing experience. It's designed to be unobtrusive
+ * yet powerful, giving users fine-grained control over visual presentation.
+ *
+ * ## Component Hierarchy
+ *
+ * ```
+ * PointCloudControlPanel
+ * ├── Toggle Button (always visible, top-left corner)
+ * │   └── Settings icon (opens/closes panel)
+ * ├── Collapsible Panel (slides in from left)
+ * │   ├── Header (title + close button)
+ * │   ├── Section: Point Rendering
+ * │   │   ├── Size slider (0.01 - 1.0)
+ * │   │   ├── Shape toggle (circle/square)
+ * │   │   └── Opacity slider (0.05 - 1.0)
+ * │   ├── Section: Color
+ * │   │   ├── Color mode toggle (vertex/uniform)
+ * │   │   ├── Uniform color picker (shown when uniform mode active)
+ * │   │   └── Background color picker
+ * │   └── Section: Scene
+ * │       ├── Show Axes toggle
+ * │       └── Show Grid toggle
+ * ```
+ *
+ * ## UI/UX Design Decisions
+ *
+ * ### Collapsible Design
+ * - Panel starts closed to maximize viewing area
+ * - Toggle button remains accessible for quick access
+ * - Smooth slide animation (200ms) provides polished feel
+ * - Backdrop blur ensures text remains readable over 3D scene
+ *
+ * ### Control Organization
+ * - Grouped into logical sections with clear headers
+ * - Point Rendering: affects individual point appearance
+ * - Color: affects overall color presentation
+ * - Scene: affects scene-level helpers and environment
+ *
+ * ### Control Types
+ * - Sliders for continuous values (size, opacity) with live value display
+ * - Toggle buttons for binary choices (shape, mode, visibility)
+ * - Color pickers for visual color selection
+ *
+ * ## Technical Implementation
+ *
+ * ### State Management
+ * - `isOpen`: Local state for panel visibility (not persisted)
+ * - Settings are NOT managed locally - they come from parent
+ * - This ensures single source of truth and enables shared settings across components
+ *
+ * ### Update Pattern
+ * - Generic `update()` helper function with TypeScript generics
+ * - Creates new settings object with spread operator for immutability
+ * - Type-safe thanks to `K extends keyof ViewerSettings` constraint
+ *
+ * @see PointCloudViewer for the component that consumes these settings
+ * @see ViewerSettings from @/lib/viewer-settings for all available settings
+ *
+ * @example
+ * ```tsx
+ * // Usage in parent component
+ * const [settings, setSettings] = useState(defaultSettings);
+ * <PointCloudControlPanel
+ *   settings={settings}
+ *   onSettingsChange={setSettings}
+ * />
+ * ```
+ */
 export default function PointCloudControlPanel({
   settings,
   onSettingsChange,
 }: PointCloudControlPanelProps) {
+  // State: Controls panel visibility (slide-in animation state)
+  // When true: panel slides in from left (translate-x-0)
+  // When false: panel hidden off-screen (-translate-x-full)
+  // This state is local to this component and not persisted between sessions
   const [isOpen, setIsOpen] = useState(false);
 
+  /**
+   * Generic helper function to update a specific viewer setting key.
+   *
+   * ## Implementation Details
+   *
+   * This function uses TypeScript generics to ensure type safety:
+   * - `K extends keyof ViewerSettings` ensures only valid setting keys can be passed
+   * - `value: ViewerSettings[K]` ensures the value type matches the key's expected type
+   *
+   * ## Immutability Pattern
+   *
+   * Creates a new settings object using the spread operator:
+   * 1. Spreads existing settings: `{ ...settings }`
+   * 2. Overrides specific key with new value: `[key]: value`
+   * 3. Passes new object to parent callback
+   *
+   * This pattern prevents direct state mutation and enables React's change detection.
+   *
+   * ## Why This Helper?
+   *
+   * Instead of repeating this pattern for every control:
+   * ```tsx
+   * onSettingsChange({ ...settings, pointSize: newValue });
+   * ```
+   *
+   * We can write:
+   * ```tsx
+   * update("pointSize", newValue);
+   * ```
+   *
+   * This reduces code duplication and makes updates more maintainable.
+   *
+   * @template K - Type parameter constrained to valid ViewerSettings keys
+   * @param key - The setting key to update (e.g., "pointSize", "opacity", "colorMode")
+   * @param value - The new value for the specified setting (type must match the key's expected type)
+   *
+   * @see ViewerSettings interface from @/lib/viewer-settings for all valid keys and their types
+   *
+   * @example
+   * ```tsx
+   * // Update point size
+   * update("pointSize", 0.5);
+   *
+   * // Toggle axes visibility
+   * update("showAxes", !settings.showAxes);
+   *
+   * // Change color mode
+   * update("colorMode", "uniform");
+   * ```
+   */
   const update = <K extends keyof ViewerSettings>(
     key: K,
     value: ViewerSettings[K]
@@ -23,6 +170,11 @@ export default function PointCloudControlPanel({
 
   return (
     <>
+      {/* Toggle Button: Always visible in top-left corner */}
+      {/* - Gear/settings icon indicates customization capability */}
+      {/* - z-index 10 ensures it's above the canvas but below fullscreen overlays */}
+      {/* - Backdrop blur provides modern glass effect over 3D scene */}
+      {/* - Transitions provide hover feedback */}
       <button
         onClick={() => setIsOpen(!isOpen)}
         className="absolute left-4 top-4 z-10 flex size-9 items-center justify-center rounded-lg bg-zinc-800/80 text-zinc-400 backdrop-blur-sm transition-colors hover:bg-zinc-700 hover:text-white"
@@ -43,11 +195,23 @@ export default function PointCloudControlPanel({
         </svg>
       </button>
 
+      {/* Collapsible Panel Container */}
+      {/* - Positioned absolute to overlay on top of canvas */}
+      {/* - Slides in/out via translate-x CSS transform */}
+      {/* - w-72 (288px) provides comfortable width for controls */}
+      {/* - h-full ensures panel spans full viewport height */}
+      {/* - Overflow-y-auto allows scrolling on smaller screens */}
+      {/* - Backdrop blur and semi-transparent background allow scene visibility */}
+      {/* - Smooth 200ms transition for polished UX */}
+      {/* - z-index 10 to stay above canvas but below modals */}
       <div
         className={`absolute left-0 top-0 z-10 flex h-full w-72 flex-col gap-5 overflow-y-auto bg-zinc-900/90 px-5 py-4 backdrop-blur-md transition-transform duration-200 ${
           isOpen ? "translate-x-0" : "-translate-x-full"
         }`}
       >
+        {/* Panel Header: Title + Close Button */}
+        {/* - Flex row with space-between for proper alignment */}
+        {/* - Close button allows users to dismiss without reaching toggle button */}
         <div className="flex items-center justify-between">
           <h2 className="text-sm font-semibold text-zinc-200">Controls</h2>
           <button
@@ -71,6 +235,10 @@ export default function PointCloudControlPanel({
           </button>
         </div>
 
+        {/* ==================== SECTION: Point Rendering ==================== */}
+        {/* Controls that affect how individual points are rendered */}
+        {/* These settings directly influence PointsMaterial properties */}
+        {/* @see Points component in PointCloudViewer.tsx for rendering implementation */}
         <section className="space-y-3">
           <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">
             Point Rendering
@@ -132,6 +300,13 @@ export default function PointCloudControlPanel({
           </label>
         </section>
 
+        {/* ==================== SECTION: Color ==================== */}
+        {/* Controls for color presentation and environment */}
+        {/* - Color mode: whether to use vertex colors from file or uniform color */}
+        {/* - Uniform color picker: active only when colorMode is "uniform" */}
+        {/* - Background: canvas background color for scene atmosphere */}
+        {/* @see PointsMaterial vertexColors and color properties */}
+        {/* @see Canvas background style in PointCloudViewer.tsx */}
         <section className="space-y-3">
           <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">
             Color
@@ -182,6 +357,13 @@ export default function PointCloudControlPanel({
           </label>
         </section>
 
+        {/* ==================== SECTION: Scene ==================== */}
+        {/* Controls for scene-level helpers and visualization aids */}
+        {/* - Show Axes: displays X (red), Y (green), Z (blue) axes at origin */}
+        {/* - Show Grid: displays ground plane grid for spatial reference */}
+        {/* These helpers don't affect the point cloud itself but provide context */}
+        {/* @see AxesHelper component in PointCloudViewer.tsx */}
+        {/* @see Grid component from @react-three/drei */}
         <section className="space-y-3">
           <h3 className="text-xs font-medium uppercase tracking-wider text-zinc-500">
             Scene
